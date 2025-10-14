@@ -1,0 +1,6 @@
+**/__pycache__/
+*.h5
+*.csv
+*.json
+*.npy
+*.onnx
