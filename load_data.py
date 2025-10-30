@@ -136,7 +136,8 @@ class UnifiedDataProcessor:
         self.metadata['mocap']['n_frames_per_subject'] = {}
         
         for subject in tqdm(subjects, desc="  Loading mocap"):
-            csv_path = self.mocap_folder / subject / self.mocap_csv
+            csv_path = self.mocap_folder / subject / "robot_welding" /self.mocap_csv
+            print(csv_path)
             
             if not csv_path.exists():
                 print(f"\n  ⚠ Mocap CSV not found for {subject}")
@@ -148,7 +149,7 @@ class UnifiedDataProcessor:
                 data_array = self.process_csv_to_3d(df, 'mocap', subject)
                 
                 # Store data
-                self.mocap_data[subject] = data_array/1000
+                self.mocap_data[subject] = data_array
                 self.metadata['mocap']['n_frames_per_subject'][subject] = len(data_array)
                 
                 # Extract metadata from first subject
@@ -557,16 +558,16 @@ def main():
                        help='Mocap CSV filename')
     parser.add_argument('--hpe-csv', default='hpe_joint_positions.csv', 
                        help='HPE CSV filename')
-    parser.add_argument('--output-dir', default='processed_data_test', help='Output directory')
+    parser.add_argument('--output-dir', default='DATA/jcp_npy_w_offsets_hpealigned', help='Output directory')
     
     args = parser.parse_args()
     
     # Create processor
     processor = UnifiedDataProcessor(
-        mocap_folder="mocap_jcp",
-        hpe_folder="cosmik_jcp",
-        mocap_csv="robot_welding_joint_center_positions_2.csv",
-        hpe_csv="robot_welding_jcp_hpe_filtered_2.csv",
+        mocap_folder="DATA/mocap_jcp_40hz",
+        hpe_folder="DATA/cosmik_jcp",
+        mocap_csv="joint_center_positions_with_offsets.csv",
+        hpe_csv="3d_keypoints_filtered_aligned.csv",
         output_dir=args.output_dir
     )
     

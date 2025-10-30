@@ -45,15 +45,15 @@ def load_data(mocap_path='base_hpe/mocap_all_subjects.npy',
         print("No metadata file found")
     
     # Verify data alignment
-    # if mocap_data.shape != hpe_data.shape:
-    #     raise ValueError(f"Data shape mismatch! Mocap: {mocap_data.shape}, HPE: {hpe_data.shape}")
+    if mocap_data.shape[0] != hpe_data.shape[0]:
+        raise ValueError(f"Data shape mismatch! Mocap: {mocap_data.shape}, HPE: {hpe_data.shape}")
     
     return mocap_data, hpe_data, metadata
 
 mocap_data, hpe_data, metadata = load_data(
-    mocap_path='processed_data_test/mocap_all_subjects.npy',
-    hpe_path='processed_data_test/hpe_all_subjects.npy',  # Update this path when you have HPE data
-    metadata_path='processed_data_test/metadata.json'
+    mocap_path='DATA/jcp_hpe_mocap_mks_wou_head/mocap_all_subjects.npy',
+    hpe_path='DATA/processed_data/mocap_all_subjects.npy',  # Update this path when you have HPE data
+    metadata_path='DATA/processed_data_test/metadata.json'
 )
 print(hpe_data[0])
 print(mocap_data[0])

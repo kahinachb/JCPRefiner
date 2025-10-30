@@ -558,7 +558,7 @@ class SimpleCSVInference:
             df_ref = pd.read_csv(reference_csv)
             ref_numeric = df_ref.select_dtypes(include=[np.number]).columns
             mocap_data = df_ref[ref_numeric].values[:, :self.n_joints*3]
-            mocap_data_3d = mocap_data.reshape(-1, self.n_joints, 3)/1000
+            mocap_data_3d = mocap_data.reshape(-1, self.n_joints, 3)
             
             # Ensure same length
             min_len = min(len(hpe_data_3d), len(mocap_data_3d), len(corrected_data))
@@ -598,9 +598,12 @@ def main():
     parser.add_argument('input_csv', type=str, help='Input CSV file with HPE data')
     parser.add_argument('-o', '--output', type=str, help='Output CSV file (default: input_corrected.csv)')
     parser.add_argument('-r', '--reference', type=str, help='Reference mocap CSV for comparison (optional)')
-    parser.add_argument('-m', '--model-dir', default='trained_2_tete2', help='Model directory (default: models)')
-    parser.add_argument('-d', '--metadata', default='processed_data_2/metadata.json', 
+    
+    parser.add_argument('-m', '--model-dir', default='trained_2/model_w_offsets', help='Model directory (default: models)')
+    parser.add_argument('-d', '--metadata', default='DATA/jcp_npy_w_offsets/metadata.json', 
                        help='Metadata file from data processing')
+    
+
     parser.add_argument('--no-plot', action='store_true', help='Disable plotting')
     parser.add_argument('--max-frames', type=int, default=None, 
                        help='Max frames to plot (default: all frames, -1 for all, or specify number to limit)')

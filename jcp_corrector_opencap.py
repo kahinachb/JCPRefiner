@@ -15,27 +15,27 @@ import matplotlib.pyplot as plt
 SEQ_LEN     = 30
 STRIDE      = 1
 BATCH_SIZE  = 32
-EPOCHS      = 200
+EPOCHS      = 2
 LR          = 1e-4
 HIDDEN      = 256
 LAYERS      = 3
-DROPOUT     = 0.4
+DROPOUT     = 0.2
 MIDHIP_IDX  = 9
 
 LAMBDA_JCP   = 0.1  # Weight for joint loss
 LAMBDA_DENSE = 0.9   # Weight for dense marker loss
 
-PATH_METADATA_JSON   = "/datasets/jcp_training/jcp_hpe_mocap_mks_wou_head/metadata.json"
-PATH_HPE_NPY         = "/datasets/jcp_training/processed_data/mocap_all_subjects.npy" #take jcp mocap as input
-PATH_DENSE_MOCAP_NPY = "/datasets/jcp_training/jcp_hpe_mocap_mks_wou_head/mocap_all_subjects.npy" #anatomical mocap 
-PATH_JCP_NPY         = "/datasets/jcp_training/processed_data/mocap_all_subjects.npy" #take jcp mocap as reference
+PATH_METADATA_JSON   = "DATA/jcp_hpe_mocap_mks_wou_head/metadata.json"
+PATH_HPE_NPY         = "DATA/processed_data/mocap_all_subjects.npy" #take jcp mocap as input
+PATH_DENSE_MOCAP_NPY = "DATA/jcp_hpe_mocap_mks_wou_head/mocap_all_subjects.npy" #anatomical mocap 
+PATH_JCP_NPY         = "DATA/processed_data/mocap_all_subjects.npy" #take jcp mocap as reference
 
 
 AUGMENTER_ROOT       = "lstm_opencap"
 AUGMENTER_MODELNAME  = "LSTM"
 SUBMODEL_LOWER       = "v0.3_lower"
 SUBMODEL_UPPER       = "v0.3_upper"
-SUBJECT_YAML_DIR     = "/datasets/jcp_training//metadata"
+SUBJECT_YAML_DIR     = "DATA//metadata"
 
 OUT_DIR              = "models_tf_physical_dual_mocap"
 
@@ -287,6 +287,21 @@ def build_joint_model(input_dim, hidden=256, layers_n=3, dropout=0.2,
     
     return keras.Model(inp, pred_seq, name="joint_corrector_sequence")
 
+def build_joint_model_lstm(input_dim, hidden=256, layers_n=3, dropout=0.2, output_dim=None):
+    """Corrects the ENTIRE sequence using past-only (causal) context via LSTMs."""
+    inp = keras.Input(shape=(SEQ_LEN, input_dim), name="hpe_in")
+    x = inp
+
+    for _ in range(layers_n):
+        x = layers.LSTM(hidden, return_sequences=True, dropout=dropout)(x)
+
+    # Per-timestep head
+    x = layers.TimeDistributed(layers.Dense(hidden, activation="relu"))(x)
+    x = layers.TimeDistributed(layers.Dropout(dropout))(x)
+
+    out_dim = input_dim if output_dim is None else output_dim
+    pred_seq = layers.TimeDistributed(layers.Dense(out_dim, activation=None))(x)
+    return keras.Model(inp, pred_seq, name="joint_corrector_sequence_lstm")
 # ==============================
 # MAIN
 # ==============================
@@ -474,6 +489,11 @@ def main():
         input_dim=J*3, hidden=HIDDEN, layers_n=LAYERS,
         dropout=DROPOUT, output_dim=J*3
     )
+
+    # corrector = build_joint_model_lstm(
+    #     input_dim=J*3, hidden=HIDDEN, layers_n=LAYERS,
+    #     dropout=DROPOUT, output_dim=J*3
+    # )
 
     # Build augmenter layer
     aug_layer = AugmenterLayer(

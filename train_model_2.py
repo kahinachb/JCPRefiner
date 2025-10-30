@@ -456,9 +456,9 @@ def main():
     print("=" * 50)
     
     mocap_data, hpe_data, metadata = load_data(
-        mocap_path='/datasets/jcp_training/processed_data/mocap_all_subjects.npy',
-        hpe_path='/datasets/jcp_training/processed_data/hpe_all_subjects.npy',  
-        metadata_path='/datasets/jcp_training/processed_data/metadata.json'
+        mocap_path='/datasets/jcp_training/jcp_npy_w_offsets//mocap_all_subjects.npy',
+        hpe_path='/datasets/jcp_training/jcp_npy_w_offsets//hpe_all_subjects.npy',  
+        metadata_path='/datasets/jcp_training/jcp_npy_w_offsets//metadata.json'
     )
     
     # Get dimensions
