@@ -24,10 +24,10 @@ class LSTMJointCorrector(nn.Module):
         # LSTM layers
         self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers, 
                            batch_first=True, dropout=dropout if num_layers > 1 else 0,
-                           bidirectional=True)
+                           bidirectional=False)
         
         # Fully connected layers
-        self.fc1 = nn.Linear(hidden_dim * 2, hidden_dim)
+        self.fc1 = nn.Linear(hidden_dim , hidden_dim)
         self.dropout = nn.Dropout(dropout)
         self.fc2 = nn.Linear(hidden_dim, output_dim)
         self.relu = nn.ReLU()
@@ -103,7 +103,7 @@ class SimpleCSVInference:
             self.hidden_dim = config.get('hidden_dim', 256)
             self.num_layers = config.get('num_layers', 3)
             self.dropout = config.get('dropout', 0.2)
-            self.stride = config.get('stride', 5)  # For overlapping windows
+            self.stride =1  # For overlapping windows
             
             print(f"Training configuration:")
             print(f"  Sequence length: {self.sequence_length}")
@@ -116,7 +116,7 @@ class SimpleCSVInference:
             self.hidden_dim = 256
             self.num_layers = 3
             self.dropout = 0.2
-            self.stride = 5
+            self.stride = 1
     
     def load_model(self):
         """Load the trained LSTM model"""
@@ -133,6 +133,8 @@ class SimpleCSVInference:
             output_dim=self.output_dim,
             dropout=0  # No dropout during inference
         ).to(self.device)
+
+        # self.model = torch.load(model_path, map_location=self.device)
         
         # Load weights
         checkpoint = torch.load(model_path, map_location=self.device)
@@ -594,13 +596,14 @@ def main():
     
     import argparse
     #trained_2/test_w_2/models2 : best model
+    #avec offset de max : trained_2/with_head/model_w_offsets/ zoe et batiste sujet de validation.
     parser = argparse.ArgumentParser(description='Simple CSV Inference for LSTM Joint Correction')
     parser.add_argument('input_csv', type=str, help='Input CSV file with HPE data')
     parser.add_argument('-o', '--output', type=str, help='Output CSV file (default: input_corrected.csv)')
     parser.add_argument('-r', '--reference', type=str, help='Reference mocap CSV for comparison (optional)')
     
-    parser.add_argument('-m', '--model-dir', default='trained_2/model_w_offsets', help='Model directory (default: models)')
-    parser.add_argument('-d', '--metadata', default='DATA/jcp_npy_w_offsets/metadata.json', 
+    parser.add_argument('-m', '--model-dir', default='trained_2/models_lstm/models', help='Model directory (default: models)')
+    parser.add_argument('-d', '--metadata', default='DATA/jcp_npy_w_offsets_mocapnfused/metadata.json', 
                        help='Metadata file from data processing')
     
 
@@ -629,23 +632,23 @@ def main():
                 args.reference,
                 args.output
             )
-        else:
-            corrected_data = inferencer.process_csv(args.input_csv, args.output)
+        # else:
+        #     corrected_data = inferencer.process_csv(args.input_csv, args.output)
             
-            # If no reference but plotting requested, still generate plots
-            if not args.no_plot:
-                # Load HPE data for plotting
-                df_hpe = pd.read_csv(args.input_csv)
-                numeric_columns = df_hpe.select_dtypes(include=[np.number]).columns
-                hpe_data = df_hpe[numeric_columns].values[:, :inferencer.n_joints*3]
-                hpe_data_3d = hpe_data.reshape(-1, inferencer.n_joints, 3)
+        #     # If no reference but plotting requested, still generate plots
+        #     if not args.no_plot:
+        #         # Load HPE data for plotting
+        #         df_hpe = pd.read_csv(args.input_csv)
+        #         numeric_columns = df_hpe.select_dtypes(include=[np.number]).columns
+        #         hpe_data = df_hpe[numeric_columns].values[:, :inferencer.n_joints*3]
+        #         hpe_data_3d = hpe_data.reshape(-1, inferencer.n_joints, 3)
                 
-                # Handle max_frames = -1 as all frames
-                max_frames_to_plot = None if args.max_frames is None or args.max_frames < 0 else args.max_frames
+        #         # Handle max_frames = -1 as all frames
+        #         max_frames_to_plot = None if args.max_frames is None or args.max_frames < 0 else args.max_frames
                 
-                # Generate plots without reference
-                inferencer.plot_comparison(hpe_data_3d, corrected_data, 
-                                         max_frames=max_frames_to_plot)
+        #         # Generate plots without reference
+        #         inferencer.plot_comparison(hpe_data_3d, corrected_data, 
+        #                                  max_frames=max_frames_to_plot)
         
         print(f"\n{'='*60}")
         print("✅ SUCCESS!")
