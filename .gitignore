@@ -10,4 +10,5 @@
 /trained_3
 /trained_hpe
 /trained3_hp_changed
-info.md
+info.md__pycache__/
+*.pyc
